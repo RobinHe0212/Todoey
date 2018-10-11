@@ -11,10 +11,11 @@ import UIKit
 class TodoListViewController: UITableViewController {
 
     
-    let items=["find Mike","play PS4","buy eggs"]
+    var items=["find Mike","play PS4","buy eggs"]
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
     }
     //Mark -Tableview Datasource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -41,5 +42,24 @@ class TodoListViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
     }
 
+   
+    @IBAction func addItems(_ sender: UIBarButtonItem) {
+        
+        var text=UITextField()
+        let alert=UIAlertController(title: "Add Items", message: "", preferredStyle: .alert)
+       let aLertAction = UIAlertAction(title: "Add", style: .default) { (action) in
+            print(text.text!)
+            self.items.append(text.text!)
+            self.tableView.reloadData()
+        }
+        alert.addTextField { (textAlertField) in
+            textAlertField.placeholder="create an item"
+            text=textAlertField
+            print("ready to write")
+        }
+        alert.addAction(aLertAction)
+        present(alert,animated: true,completion: nil)
+        
+    }
 }
 
