@@ -16,6 +16,7 @@ class CategoryTableViewController: SwipeTableViewController{
     let realm=try!Realm()
     var categoryList : Results<Category>?
     
+    @IBOutlet weak var searchBar: UISearchBar!
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -23,6 +24,10 @@ class CategoryTableViewController: SwipeTableViewController{
         tableView.rowHeight=65.0
         
         tableView.separatorStyle = .none
+        if let navbar = navigationController?.navigationBar{
+            searchBar.barTintColor = navbar.barTintColor
+        }
+        
     }
 
     //Table view for data source methods
@@ -32,7 +37,10 @@ class CategoryTableViewController: SwipeTableViewController{
         
         if let currentCategory = categoryList?[indexPath.row]{
             cell.textLabel?.text = currentCategory.name
-            cell.backgroundColor=UIColor(hexString: currentCategory.color )
+          guard let cateColor = UIColor(hexString: currentCategory.color) else{fatalError()}
+            cell.backgroundColor=cateColor
+            cell.textLabel?.textColor=ContrastColorOf(cateColor, returnFlat: true)
+            
             
         }
         return cell
@@ -54,6 +62,10 @@ class CategoryTableViewController: SwipeTableViewController{
        if let indexPath=tableView.indexPathForSelectedRow{
             
             destination.selectedCategory=categoryList?[indexPath.row]
+        if let des = destination.selectedCategory {
+            searchBar.barTintColor=UIColor(hexString: des.color)
+            print(searchBar.barTintColor!.hexValue())
+        }
         }
     }
     
@@ -121,13 +133,11 @@ class CategoryTableViewController: SwipeTableViewController{
     
 }
 extension CategoryTableViewController : UISearchBarDelegate{
-//
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        let request:NSFetchRequest<Category>=Category.fetchRequest()
-//        request.predicate=NSPredicate(format: "name CONTAINS[cd] %@", searchBar.text!)
-//        request.sortDescriptors=[NSSortDescriptor(key: "name", ascending: true)]
-//        loadItems(with: request)
-//    }
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        categoryList=categoryList?.filter("name CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "name", ascending: true)
+        tableView.reloadData()
+    }
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0{
@@ -140,37 +150,4 @@ extension CategoryTableViewController : UISearchBarDelegate{
     
     
 }
-//Swipe cell delegate method
-//extension CategoryTableViewController:SwipeTableViewCellDelegate{
-//    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
-//        guard orientation == .right else{return nil}
-//        
-//        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { (action, indexPath) in
-//            
-//            if let categoryForDeletion = self.categoryList?[indexPath.row]{
-//                do{
-//                    try self.realm.write {
-//                        self.realm.delete(categoryForDeletion)
-//                    }
-//                }catch{
-//                    print("delete error ,\(error)")
-//                }
-//               
-//            }
-//            
-//        }
-//        
-//        deleteAction.image=UIImage(named: "delete-icon")
-//        
-//        return [deleteAction]
-//    }
-//    
-//    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
-//        var options = SwipeTableOptions()
-//        options.expansionStyle = .destructive
-//        return options
-//    }
-//    
-//    
-//    
-//}
+
