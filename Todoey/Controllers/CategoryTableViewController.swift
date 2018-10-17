@@ -19,7 +19,9 @@ class CategoryTableViewController: SwipeTableViewController{
     @IBOutlet weak var searchBar: UISearchBar!
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        let dataFilePath=FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        
+        print(dataFilePath)
         loadItems()
         tableView.rowHeight=65.0
         
