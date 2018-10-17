@@ -8,8 +8,8 @@
 
 import UIKit
 import RealmSwift
-
-class TodoListViewController: UITableViewController {
+import ChameleonFramework
+class TodoListViewController: SwipeTableViewController {
 
     
     
@@ -32,17 +32,27 @@ class TodoListViewController: UITableViewController {
        let dataFilePath=FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         
         print(dataFilePath)
-
+        
+        tableView.rowHeight=65.0
+        tableView.separatorStyle = .none
         
         
     }
     //Mark -Tableview Datasource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell=tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
+        let cell=super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item=items?[indexPath.row]{
             
             cell.textLabel?.text=item.title
+           
+            
+            if let color = UIColor(hexString: selectedCategory!.color)?.darken(byPercentage: CGFloat(indexPath.row)/CGFloat(items!.count)){
+                
+                cell.backgroundColor=color
+                 cell.textLabel?.textColor=ContrastColorOf(color, returnFlat: true)
+            }
+            
             
             cell.accessoryType=item.done ? .checkmark : .none
         }else {
@@ -120,6 +130,19 @@ class TodoListViewController: UITableViewController {
     
     }
     
+    //delete data
+    override func update(at indexPath: IndexPath) {
+        if let currentItem = items?[indexPath.row]{
+        do{
+        try realm.write {
+            realm.delete(currentItem)
+        }
+        }catch{
+            print("delete error \(error)")
+        }
+        }
+    }
+    
 
     
 }
@@ -130,12 +153,7 @@ extension TodoListViewController:UISearchBarDelegate{
         items=items?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: false)
     
         tableView.reloadData()
-//        let request:NSFetchRequest<Items> = Items.fetchRequest()
-//        request.predicate=NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//
-//        request.sortDescriptors=[NSSortDescriptor(key: "title", ascending: true)]
-//       loadItems(with: request,predicator: request.predicate)
-//
+
   }
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {

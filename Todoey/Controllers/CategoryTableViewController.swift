@@ -8,8 +8,10 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
-class CategoryTableViewController: UITableViewController {
+
+class CategoryTableViewController: SwipeTableViewController{
 
     let realm=try!Realm()
     var categoryList : Results<Category>?
@@ -18,13 +20,23 @@ class CategoryTableViewController: UITableViewController {
         super.viewDidLoad()
 
         loadItems()
+        tableView.rowHeight=65.0
+        
+        tableView.separatorStyle = .none
     }
 
     //Table view for data source methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell=tableView.dequeueReusableCell(withIdentifier: "TodoCategoryCell", for: indexPath)
-        cell.textLabel?.text = categoryList?[indexPath.row].name ?? "No Category added"
+
+        let cell=super.tableView(tableView, cellForRowAt: indexPath)
+        
+        if let currentCategory = categoryList?[indexPath.row]{
+            cell.textLabel?.text = currentCategory.name
+            cell.backgroundColor=UIColor(hexString: currentCategory.color )
+            
+        }
         return cell
+        
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -54,7 +66,7 @@ class CategoryTableViewController: UITableViewController {
             print("alertaction \(text.text!)")
             let newCategory=Category()
             newCategory.name=text.text!
-          
+           newCategory.color=UIColor.randomFlat.hexValue()
             self.save(category: newCategory)
             print(self.categoryList?.count ?? 1)
         }
@@ -91,7 +103,21 @@ class CategoryTableViewController: UITableViewController {
         
         tableView.reloadData()
     }
-    
+    //delete data
+    override func update(at indexPath: IndexPath) {
+        
+        if let categoryForDeletion = categoryList?[indexPath.row]{
+            do{
+                try realm.write {
+                    realm.delete(categoryForDeletion)
+                }
+            }catch{
+                print("delete error ,\(error)")
+            }
+            
+        }
+
+    }
     
 }
 extension CategoryTableViewController : UISearchBarDelegate{
@@ -114,3 +140,37 @@ extension CategoryTableViewController : UISearchBarDelegate{
     
     
 }
+//Swipe cell delegate method
+//extension CategoryTableViewController:SwipeTableViewCellDelegate{
+//    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+//        guard orientation == .right else{return nil}
+//        
+//        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { (action, indexPath) in
+//            
+//            if let categoryForDeletion = self.categoryList?[indexPath.row]{
+//                do{
+//                    try self.realm.write {
+//                        self.realm.delete(categoryForDeletion)
+//                    }
+//                }catch{
+//                    print("delete error ,\(error)")
+//                }
+//               
+//            }
+//            
+//        }
+//        
+//        deleteAction.image=UIImage(named: "delete-icon")
+//        
+//        return [deleteAction]
+//    }
+//    
+//    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
+//        var options = SwipeTableOptions()
+//        options.expansionStyle = .destructive
+//        return options
+//    }
+//    
+//    
+//    
+//}
