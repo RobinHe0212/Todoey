@@ -1,4 +1,4 @@
-# Todo meme
+# Todo memo
 Always forget to buy something when go shopping???
 Don't worry! I got u.
 You can add the category you want go for and and details items you prefer just by clicking and swiping the cell if you have alredy bought one or change your mind all of sudden.
