@@ -7,12 +7,13 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryTableViewController: UITableViewController {
 
-    var categoryList = [Category]()
-    let context=(UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    let realm=try!Realm()
+    var categoryList : Results<Category>?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -22,12 +23,12 @@ class CategoryTableViewController: UITableViewController {
     //Table view for data source methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell=tableView.dequeueReusableCell(withIdentifier: "TodoCategoryCell", for: indexPath)
-        cell.textLabel?.text = categoryList[indexPath.row].name
+        cell.textLabel?.text = categoryList?[indexPath.row].name ?? "No Category added"
         return cell
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryList.count
+        return categoryList?.count ?? 1
     }
     
     //Table view for delegate methods
@@ -40,7 +41,7 @@ class CategoryTableViewController: UITableViewController {
         let destination=segue.destination as! TodoListViewController
        if let indexPath=tableView.indexPathForSelectedRow{
             
-            destination.selectedCategory=categoryList[indexPath.row]
+            destination.selectedCategory=categoryList?[indexPath.row]
         }
     }
     
@@ -51,11 +52,11 @@ class CategoryTableViewController: UITableViewController {
         let alertAction=UIAlertAction(title: "Add", style: .default) { (action) in
             //Todo set value in the datamodel and save data
             print("alertaction \(text.text!)")
-            let newCategory=Category(context: self.context)
+            let newCategory=Category()
             newCategory.name=text.text!
-            self.categoryList.append(newCategory)
-            self.saveData()
-            print(self.categoryList.count)
+          
+            self.save(category: newCategory)
+            print(self.categoryList?.count ?? 1)
         }
         
         
@@ -69,11 +70,13 @@ class CategoryTableViewController: UITableViewController {
         present(alert,animated: true,completion: nil)
     }
     
-    //save data into context
-    func saveData(){
+    
+    func save(category:Category){
         do{
         try
-            context.save()
+            realm.write {
+                realm.add(category)
+            }
         }catch{
             print("Save data error \(error)")
             
@@ -82,28 +85,24 @@ class CategoryTableViewController: UITableViewController {
     }
     
     //load data
-    func loadItems(with request:NSFetchRequest<Category> = Category.fetchRequest()){
+    func loadItems(){
+
+       categoryList=realm.objects(Category.self)
         
-        do{
-          categoryList = try context.fetch(request)
-    
-        }catch{
-            print("load data error \(error)")
-        }
         tableView.reloadData()
     }
     
     
 }
 extension CategoryTableViewController : UISearchBarDelegate{
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        let request:NSFetchRequest<Category>=Category.fetchRequest()
-        request.predicate=NSPredicate(format: "name CONTAINS[cd] %@", searchBar.text!)
-        request.sortDescriptors=[NSSortDescriptor(key: "name", ascending: true)]
-        loadItems(with: request)
-    }
-    
+//
+//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+//        let request:NSFetchRequest<Category>=Category.fetchRequest()
+//        request.predicate=NSPredicate(format: "name CONTAINS[cd] %@", searchBar.text!)
+//        request.sortDescriptors=[NSSortDescriptor(key: "name", ascending: true)]
+//        loadItems(with: request)
+//    }
+
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0{
             loadItems()
